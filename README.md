@@ -73,14 +73,14 @@ Uninstalation
 
 Dev
 ====
-Rejah Rehim
-Sreenath Sasikumar
+	Rejah Rehim
+	Sreenath Sasikumar
 
 Thanks
 ====
-Mozilla Contributers
-Devs of all the included tools
-Laiju Thomas
+	Mozilla Contributers
+	Devs of all the included tools
+	Laiju Thomas
 
 Help & Support
 ====
