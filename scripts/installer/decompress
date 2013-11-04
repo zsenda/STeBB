@@ -1,0 +1,53 @@
+#!/bin/bash
+
+function progressInd {
+  chars=( "-" "\\" "|" "/" )
+  interval=.1
+  count=0
+  while true
+  do
+    pos=$(($count % 4))	
+    echo   -en "\b${chars[$pos]}"
+    count=$(($count + 1))
+    sleep $interval
+  done
+}
+
+#
+# Stop progress indicator
+#
+function stopProgressInd {
+  exec 2>/dev/null
+  kill $1
+  #echo -en "\n"
+}
+
+echo  -e "\n"
+echo  -en "Unpacking STeBB Files...\t\t-  "
+ 
+progressInd &
+pid=$!
+
+trap "stopProgressInd $pid; exit" INT TERM EXIT
+
+
+export TMPDIR=`mktemp -d /tmp/selfextract.XXXXXX`
+
+ARCHIVE=`awk '/^__ARCHIVE_BELOW__/ {print NR + 1; exit 0; }' $0`
+
+tail -n+$ARCHIVE $0 | tar xzv -C $TMPDIR > /dev/null
+
+
+stopProgressInd $pid 
+echo -en "\b\033[32m[OK]\033[0m\n"
+
+CDIR=`pwd`
+cd $TMPDIR
+./installSTeBB
+
+cd $CDIR
+rm -rf $TMPDIR
+
+exit 0
+
+__ARCHIVE_BELOW__
