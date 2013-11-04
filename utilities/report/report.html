@@ -1,0 +1,597 @@
+<!DOCTYPE >
+
+<head>
+<title>Web Application Security Report Generator</title>
+<style type="text/css">
+a:focus { 
+    outline: none; 
+}
+button::-moz-focus-inner {
+  border: 0;
+}
+h1,h2,h3{
+	color: rgba(0, 0, 0, 0.5);
+	text-shadow: 1px 2px 2px rgba(255, 255,255, 0.9), 0 0 2px rgba(0, 0, 0, 0.2);
+	}
+.methodology a {
+	 color: rgba(0, 0, 0, 0.5);
+		}
+h2{font-size:16px;}
+h1{font-size:20px;}
+td{font-size:13px;}
+td button {
+	color:White; 
+	border:1px solid;
+	background-color:#ff4008;
+	border-radius:5px;
+	padding:2px;
+	margin-top:5px;
+	min-width:120px;	
+	cursor: pointer;
+}
+body{padding:2% 3% 3% 3%;
+	font-family:Georgia;
+	background-color:#efefef;
+	color:black;
+	max-width:650px;
+	min-width:400px;
+	margin:auto;
+	font-size:14px;
+}
+a,.normal{text-decoration:none;color:#111;}
+a.list{text-decoration:none;font-weight:bold;font-size:13px;}
+a.note{text-decoration:none;color:#ff4008;}
+a.nav{color:gray;}
+.toggle{text-decoration:none;font-size:12px!important;position:relative;top:-3px;color:gray;}
+textarea{font-family:Arial; width:100%;font-size:12px;} 
+input {font-size:12px;}
+.activated{ color:#0082c8;font-weight:bold;font-size:13px}
+</style>
+<script src="jquery-1.8.2.min.js"></script>
+</head>
+
+<body style="border:1px solid #ddd;">
+<form data-persist="garlic" method="POST" >
+<div style="font-family:Georgia!important;margin:auto;border-bottom:1px solid #ddd;" align="center">
+<h1>Web App Security Report Generator</h1>
+<h2 class="methodology"><a href="https://www.owasp.org/index.php/OWASP_Testing_Guide_v3_Table_of_Contents" target="_blank">( OWASP )</a></h2>
+</div>
+<span style="position: absolute; left: 43%; top: 40%; color: white; background-color: red; display: none; " id="loading">&nbsp;Loading ... Please be patient!&nbsp;</span>
+<a name="start"></a>
+<div style="margin:auto;border-bottom:1px solid #ddd;" align="center">
+<table width="100%" border="0" cellpadding="2" cellspacing="2">
+  <tbody><tr>
+    <th width="30%" scope="col">&nbsp;</th>
+    <th width="70%" scope="col">&nbsp;</th>
+  </tr>
+  <tr>
+    <td>Target site:</td>
+    <td><input name="text" type="text" id="site" style="width:100%;font-weight:bold;" placeholder="http://example.com"></td>
+  </tr>
+   <tr>
+    <td>Target IP:</td>
+    <td><input name="text2" type="text" id="ip" style="width:100%;font-weight:bold;" placeholder="127.0.0.1"></td>
+  </tr>
+  <tr>
+    <td>Security tester:</td>
+    <td><input name="text3" type="text" id="pentester" style="width:100%;font-weight:bold;" placeholder="Your Name"></td>
+  </tr>
+   <tr>
+    <td>Tested for:</td>
+    <td><input name="text4" type="text" id="client" style="width:100%;font-weight:bold;" placeholder="Client Name"></td>
+  </tr>
+  <tr>
+    <td>Tested date:</td>
+    <td><input name="text5" type="text" id="date" style="width:100%;font-weight:bold;" placeholder="dd/mm/yyyy"></td>
+  </tr>
+  <tr>
+    <td height="32"><button type="button" value="Reset Report" onclick="reset();localStorage.clear();populate();">Reset Report</button></td>
+    <td align="right"><button type="button" value="Generate Report" onclick="report()" id="btnReport">Generate Report</button></td>
+  </tr>
+</tbody></table>
+<br>
+</div>
+
+<div align="left" style="border-bottom:1px solid #ddd;padding:8px;">
+<span style="font-size:12px;">
+	<strong ><a href="javascript:void(0)" onclick="if($(&#39;exec_sum&#39;).style.display==&#39;none&#39;){$(&#39;exec_sum&#39;).style.display=&#39;&#39;;$(&#39;exec_sum&#39;).focus();}else{$(&#39;exec_sum&#39;).style.display=&#39;none&#39;;}">Test Summary <img style="padding-left:5px;width:16px;height:16px;border:none;padding-right:30px;" src="edit.png"/></a></strong>
+	<span id="exec_sum_place">
+		<textarea name="textarea6" cols="85"  rows="10" id="exec_sum" style="display:none"></textarea>
+	</span>
+
+	<strong><a href="javascript:void(0)" onclick="if($(&#39;scope&#39;).style.display==&#39;none&#39;){$(&#39;scope&#39;).style.display=&#39;&#39;;$(&#39;scope&#39;).focus();}else{$(&#39;scope&#39;).style.display=&#39;none&#39;;}">Test Scope <img style="padding-left:5px;width:16px;height:16px;border:none;padding-right:30px;" src="edit.png"/></a></strong>
+	<span id="scope_place">
+		<textarea name="textarea7" cols="85" rows="10" id="scope" style="display:none"></textarea>
+	</span>
+
+<strong><a href="javascript:void(0)" onclick="if($(&#39;keyFindings&#39;).style.display==&#39;none&#39;){$(&#39;keyFindings&#39;).style.display=&#39;&#39;;$(&#39;keyFindings&#39;).focus();}else{$(&#39;keyFindings&#39;).style.display=&#39;none&#39;;}">Test Findings <img style="padding-left:5px;width:16px;height:16px;border:none;padding-right:30px;" src="edit.png"/></a></strong>
+<span id="keyFindings_place"><textarea name="textarea8" cols="85" rows="10" id="keyFindings" style="display:none"></textarea></span>
+
+<strong><a href="javascript:void(0)" onclick="if($(&#39;conclusion&#39;).style.display==&#39;none&#39;){$(&#39;conclusion&#39;).style.display=&#39;&#39;;$(&#39;conclusion&#39;).focus();}else{$(&#39;conclusion&#39;).style.display=&#39;none&#39;;}">Conclusion <img style="padding-left:5px;width:16px;height:16px;border:none;padding-right:30px;" src="edit.png"/></a></strong>
+<span id="conclusion_place"><textarea name="textarea9" cols="85" rows="10" id="conclusion" style="display:none"></textarea></span>
+<br>
+</div>
+
+<br>
+<p id="ck"></p><a name="end"></a>
+<script type="text/javascript">
+
+// OWASP 64 tests 
+var lst = new Array("OWASP-IG-001 - Testing: Spiders, robots, and Crawlers","OWASP-IG-002 - Search engine discovery/Reconnaissance","OWASP-IG-003 - Identify application entry points","OWASP-IG-004 - Testing for Web Application Fingerprint","OWASP-IG-005 - Application Discovery","OWASP-IG-006 - Analysis of Error Codes","OWASP-CM-001 - SSL/TLS Testing","OWASP-CM-002 - DB Listener Testing","OWASP-CM-003 - Infrastructure configuration management testing","OWASP-CM-004 - Application configuration management testing","OWASP-CM-005 - Testing for File extensions handling","OWASP-CM-006 - Old, backup and unreferenced files","OWASP-CM-007 - Infrastructure and Application Admin Interfaces","OWASP-CM-008 - Testing for HTTP Methods and XST","OWASP-AT-001 - Credentials transport over an encrypted channel","OWASP-AT-002 - Testing for user enumeration","OWASP-AT-003 - Default or guessable (dictionary) user account","OWASP-AT-004 - Testing For Brute Force","OWASP-AT-005 - Testing for Bypassing authentication schema","OWASP-AT-006 - Testing for Vulnerable remember password and pwd reset","OWASP-AT-007 - Testing for Logout and Browser Cache Management","OWASP-AT-008 - Testing for Captcha","OWASP-AT-009 - Testing for Multiple factors Authentication","OWASP-AT-010 - Testing for Race Conditions","OWASP-SM-001 - Testing for Session Management Schema","OWASP-SM-002 - Testing for Cookies attributes","OWASP-SM_003 - Testing for Session Fixation","OWASP-SM-004 - Testing for Exposed Session Variables","OWASP-SM-005 - Testing for CSRF","OWASP-AZ-001 - Testing for path traversal","OWASP-AZ-002 - Testing for bypassing authorization schema","OWASP-AZ-003 - Testing for Privilege Escalation","OWASP-BL-001 - Business Logic Bugs","OWASP-DV-001 - Testing for Reflected Cross Site Scripting","OWASP-DV-002 - Testing for Stored Cross Site Scripting","OWASP-DV-003 - Testing for DOM based Cross Site Scripting","OWASP-DV-004 - Testing for Cross Site Flashing","OWASP-DV-005 - SQL Injection (MS,My,Oracle,Postgre)","OWASP-DV-006 - LDAP Injection","OWASP-DV-007 - ORM Injection","OWASP-DV-008 - XML Injection","OWASP-DV-009 - SSI Injection","OWASP-DV-010 - XPath Injection","OWASP-DV-011 - IMAP/SMTP Injection","OWASP-DV-012 - Code Injection","OWASP-DV-013 - OS Commanding","OWASP-DV-014 - Buffer overflow Testing Heap, Stack, FormatString","OWASP-DV-015 - Incubated vulnerability testing","OWASP-DV-016 - Testing for HTTP Splitting/Smuggling","OWASP-DS-001 - Testing for SQL Wildcard Attacks","OWASP-DS-002 - Locking Customer Accounts","OWASP-DS-003 - Buffer Overflows","OWASP-DS-004 - User Specified Object Allocation","OWASP-DS-005 - User Input as a Loop Counter","OWASP-DS-006 - Writing User Provided Data to Disk","OWASP-DS-007 - Failure to Release Resources","OWASP-DS-008 - Storing too Much Data in Session","OWASP-WS-001 - WS Information Gathering","OWASP-WS-002 - Testing WSDL","OWASP-WS-003 - XML Structural Testing","OWASP-WS-004 - XML Content-level Testing","OWASP-WS-005 - HTTP GET parameters/REST Testing","OWASP-WS-006 - Naughty SOAP attachments","OWASP-WS-007 - Replay Testing","OWASP-AJ-001 - AJAX Vulnerabilities","OWASP-AJ-002 - Testing For AJAX");
+
+var lst_bak = new Array;
+lst_bak=lst_bak.concat(lst);
+ 
+var key = new Array();
+var phase = new Array("Information Gathering","Configuration Management Testing","Authentication Testing","Session Management Testing","Authorization Testing","Business Logic Testing","Data Validation Testing","Denial of Service Testing","Web Services Testing","Ajax Testing");
+
+//1. Information Gathering
+key["OWASP-IG-001 - Testing: Spiders, robots, and Crawlers"]=1;key["OWASP-IG-002 - Search engine discovery/Reconnaissance"]=1; key["OWASP-IG-003 - Identify application entry points"]=1;; key["OWASP-IG-004 - Testing for Web Application Fingerprint"]=1; key["OWASP-IG-005 - Application Discovery"]=1; key["OWASP-IG-006 - Analysis of Error Codes"]=1; 
+
+//2. Configuration Management Testing
+key["OWASP-CM-001 - SSL/TLS Testing"]=2;key["OWASP-CM-002 - DB Listener Testing"]=2;key["OWASP-CM-003 - Infrastructure configuration management testing"]=2;key["OWASP-CM-004 - Application configuration management testing"]=2;key["OWASP-CM-005 - Testing for File extensions handling"]=2;key["OWASP-CM-006 - Old, backup and unreferenced files"]=2;key["OWASP-CM-007 - Infrastructure and Application Admin Interfaces"]=2;key["OWASP-CM-008 - Testing for HTTP Methods and XST"]=2;
+
+
+//3. Authentication Testing
+key["OWASP-AT-001 - Credentials transport over an encrypted channel"]=3;key["OWASP-AT-002 - Testing for user enumeration"]=3;key["OWASP-AT-003 - Default or guessable (dictionary) user account"]=3;key["OWASP-AT-004 - Testing For Brute Force"]=3;key["OWASP-AT-005 - Testing for Bypassing authentication schema"]=3;key["OWASP-AT-006 - Testing for Vulnerable remember password and pwd reset"]=3;key["OWASP-AT-007 - Testing for Logout and Browser Cache Management"]=3;key["OWASP-AT-008 - Testing for Captcha"]=3;key["OWASP-AT-009 - Testing for Multiple factors Authentication"]=3;key["OWASP-AT-010 - Testing for Race Conditions"]=3;
+
+//4. Session Management Testing
+key["OWASP-SM-001 - Testing for Session Management Schema"]=4;key["OWASP-SM-002 - Testing for Cookies attributes"]=4;key["OWASP-SM_003 - Testing for Session Fixation"]=4;key["OWASP-SM-004 - Testing for Exposed Session Variables"]=4;key["OWASP-SM-005 - Testing for CSRF"]=4;
+
+//5. Authorization testing
+key["OWASP-AZ-001 - Testing for path traversal"]=5;key["OWASP-AZ-002 - Testing for bypassing authorization schema"]=5;key["OWASP-AZ-003 - Testing for Privilege Escalation"]=5;
+
+//6. Business Logic Testing
+key["OWASP-BL-001 - Business Logic Bugs"]=6;
+
+//7. Data Validation Testing
+key["OWASP-DV-001 - Testing for Reflected Cross Site Scripting"]=7;key["OWASP-DV-002 - Testing for Stored Cross Site Scripting"]=7;key["OWASP-DV-003 - Testing for DOM based Cross Site Scripting"]=7;key["OWASP-DV-004 - Testing for Cross Site Flashing"]=7;key["SQL Injection (OWASP-DV-005)"]=7;key["Oracle Testing"]=7;key["MySQL Testing"]=7;key["SQL Server Testing"]=7;key["MS Access Testing"]=7;key["PostgreSQL Testing"]=7;key["OWASP-DV-006 - LDAP Injection"]=7;key["OWASP-DV-007 - ORM Injection"]=7;key["OWASP-DV-008 - XML Injection"]=7;key["OWASP-DV-009 - SSI Injection"]=7;key["OWASP-DV-010 - XPath InjectionOWASP-DV-011 - IMAP/SMTP Injection"]=7;key["OWASP-DV-012 - Code Injection"]=7;key["OWASP-DV-013 - OS Commanding"]=7;key["OWASP-DV-014 - Buffer overflow Testing Heap, Stack, FormatString"]=7;key["OWASP-DV-015 - Incubated vulnerability testing"]=7;key["OWASP-DV-016 - Testing for HTTP Splitting/Smuggling"]=7;
+
+//8.DOS Testing
+key["OWASP-DS-001 - Testing for SQL Wildcard Attacks"]=8;key["OWASP-DS-002 - Locking Customer Accounts"]=8;key["OWASP-DS-003 - Buffer Overflows"]=8;key["OWASP-DS-004 - User Specified Object Allocation"]=8;key["OWASP-DS-005 - User Input as a Loop Counter"]=8;key["OWASP-DS-006 - Writing User Provided Data to Disk"]=8;key["OWASP-DS-007 - Failure to Release Resources"]=8;key["OWASP-DS-008 - Storing too Much Data in Session"]=8;
+
+//9. Web Services Testing
+key["OWASP-WS-001 - WS Information Gathering"]=9;key["OWASP-WS-002 - Testing WSDL"]=9;key["OWASP-WS-003 - XML Structural Testing"]=9;key["OWASP-WS-004 - XML Content-level Testing"]=9;key["OWASP-WS-005 - HTTP GET parameters/REST Testing"]=9;key["OWASP-WS-006 - Naughty SOAP attachments"]=9;key["OWASP-WS-007 - Replay Testing"]=9;
+
+// 10. Ajax Testing
+key["OWASP-AJ-001 - AJAX Vulnerabilities"]=10;key["OWASP-AJ-002 - Testing For AJAX"]=10;
+ 
+function $(id){return document.getElementById(id);} 
+
+var firstTime = true;
+ 
+function populate()
+{
+var ck = $("ck");
+ck.innerHTML = '';
+var data = '';
+var a = false;var b=false;var c=false; var d = false;var e=false;var f=false;var g=false;var h = false;var i = false;var j=false;var k=false;
+	for (var i=0;i<=lst.length-1;i++)
+	{		
+		switch(key[lst[i]])
+		{
+			case 1:
+			if(a==false){data += '<h2>' + phase[0] + ' &nbsp;&nbsp;<a class="toggle" href="javascript:void(0)" onclick="if($(\'phase-1\').style.display!=\'none\'){$(\'phase-1\').style.display=\'none\';this.innerHTML=\'[+]\';}else{$(\'phase-1\').style.display=\'block\';this.innerHTML=\'[&#8212;]\';}">[&#8212;]</a></h2><span style="display:block" id="phase-1">';a=true;}
+			break;
+			case 2:
+			if(b==false){data += '</span><h2>' + phase[1] + ' &nbsp;&nbsp;<a class="toggle" href="javascript:void(0)" onclick="if($(\'phase-2\').style.display!=\'none\'){$(\'phase-2\').style.display=\'none\';this.innerHTML=\'[+]\';}else{$(\'phase-2\').style.display=\'block\';this.innerHTML=\'[&#8212;]\';}">[+]</a></h2><span style="display:none" id="phase-2">';b=true;}
+			break;
+			case 3:
+			if(c==false){data += '</span><h2>' + phase[2]+ ' &nbsp;&nbsp;<a class="toggle" href="javascript:void(0)" onclick="if($(\'phase-3\').style.display!=\'none\'){$(\'phase-3\').style.display=\'none\';this.innerHTML=\'[+]\';}else{$(\'phase-3\').style.display=\'block\';this.innerHTML=\'[&#8212;]\';}">[+]</a></h2><span style="display:none" id="phase-3">';c=true;}
+			break;				
+			case 4:
+			if(d==false){data += '</span><h2>' + phase[3]+' &nbsp;&nbsp;<a class="toggle" href="javascript:void(0)" onclick="if($(\'phase-4\').style.display!=\'none\'){$(\'phase-4\').style.display=\'none\';this.innerHTML=\'[+]\';}else{$(\'phase-4\').style.display=\'block\';this.innerHTML=\'[&#8212;]\';}">[+]</a></h2><span style="display:none" id="phase-4">';d=true;}
+			break;			
+			case 5:
+			if(e==false){data +='</span><h2>' + phase[4]+ ' &nbsp;&nbsp;<a class="toggle" href="javascript:void(0)" onclick="if($(\'phase-5\').style.display!=\'none\'){$(\'phase-5\').style.display=\'none\';this.innerHTML=\'[+]\';}else{$(\'phase-5\').style.display=\'block\';this.innerHTML=\'[&#8212;]\';}">[+]</a></h2><span style="display:none" id="phase-5">';e=true;}
+			break;				
+			case 6:
+			if(f==false){data +='</span><h2>' + phase[5]+' &nbsp;&nbsp;<a class="toggle" href="javascript:void(0)" onclick="if($(\'phase-6\').style.display!=\'none\'){$(\'phase-6\').style.display=\'none\';this.innerHTML=\'[+]\';}else{$(\'phase-6\').style.display=\'block\';this.innerHTML=\'[&#8212;]\';}">[+]</a></h2><span style="display:none" id="phase-6">';f=true;}
+			break;				
+			case 7:
+			if(g==false){data += '</span><h2>' + phase[6]+' &nbsp;&nbsp;<a class="toggle" href="javascript:void(0)" onclick="if($(\'phase-7\').style.display!=\'none\'){$(\'phase-7\').style.display=\'none\';this.innerHTML=\'[+]\';}else{$(\'phase-7\').style.display=\'block\';this.innerHTML=\'[&#8212;]\';}">[+]</a></h2><span style="display:none" id="phase-7">';g=true;}
+			break;	
+
+			case 8:
+			if(h==false){data += '</span><h2>' + phase[7]+' &nbsp;&nbsp;<a class="toggle" href="javascript:void(0)" onclick="if($(\'phase-8\').style.display!=\'none\'){$(\'phase-8\').style.display=\'none\';this.innerHTML=\'[+]\';}else{$(\'phase-8\').style.display=\'block\';this.innerHTML=\'[&#8212;]\';}">[+]</a></h2><span style="display:none" id="phase-8">';h=true;}
+			break;	
+			case 9:
+			if(j==false){data += '</span><h2>' + phase[8]+' &nbsp;&nbsp;<a class="toggle" href="javascript:void(0)" onclick="if($(\'phase-9\').style.display!=\'none\'){$(\'phase-9\').style.display=\'none\';this.innerHTML=\'[+]\';}else{$(\'phase-9\').style.display=\'block\';this.innerHTML=\'[&#8212;]\';}">[+]</a></h2><span style="display:none" id="phase-9">';j=true;}
+			break;				
+			case 10:
+			if(k==false){data += '</span><h2>' + phase[9]+' &nbsp;&nbsp;<a class="toggle" href="javascript:void(0)" onclick="if($(\'phase-10\').style.display!=\'none\'){$(\'phase-10\').style.display=\'none\';this.innerHTML=\'[+]\';}else{$(\'phase-10\').style.display=\'block\';this.innerHTML=\'[&#8212;]\';}">[+]</a></h2><span style="display:none" id="phase-10">';k=true;}
+			break;							
+		}
+		
+		// used vars: rt, ck, vt, vk, lnk,note
+		var checkboxId = 'ck-'+ i ;
+		var checkboxState = localStorage.getItem(checkboxId);
+
+		data += "<div style='padding-top:5px;'>"+ (i+1) + ". <input type='checkbox' name='checkbox"+i+"' onclick='setCheckboxValue(" + i + ");'";
+		if (checkboxState == "true") {
+		       data += "checked='checked'";
+		    } 
+		 data += "id='ck-" + i + "' data-storage=\"false\" \/><a ";
+	
+		if (checkboxState == "true") {
+		       data += "class='activated'";
+		    } else{
+		    	  data += "class='list'";
+		    }
+		  data += "id='lnk-"+i+"'  href='javascript:void(0)' onclick='setCheckboxValue(" + i + ");setCheckboxState(" + i + ");'>" + lst[i] + "</a>&nbsp;&nbsp;&nbsp;";
+	
+		var radioButtonId = 'vt-'+ i ;
+		var radioButtonState = localStorage.getItem(radioButtonId);
+		data += "<div style='padding-left:40px;border-bottom:1px solid #ddd;padding-bottom:5px;padding-top:2px;font-size:12px;'>Vulnerable: <a href='javascript:void(0)' onclick='setRadioButtonValue( " + i + " , \"yes\");'><input type='radio' value='1' id='vkyes-" + i + "' name='vk-" + i + "'";
+			if (radioButtonState=='yes'){
+				data += "checked='checked'";
+			}
+		data += "data-storage=\"false\" > Yes</a>&nbsp;&nbsp; <a href='javascript:void(0)' onclick='setRadioButtonValue(" + i + ", \"no\");'><input type='radio' value='0' id='vkno-" + i + "'  name='vk-" + i + "'";
+			if (radioButtonState!='yes'){
+				data += "checked='checked'";
+			}
+		data += "data-storage=\"false\" > No&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a class='note' id='note-"+i+"' href='javascript:void(0)' onclick='if($(\"rt-" + i + "\").style.display==\"block\"){$(\"rt-" + i + "\").style.display=\"none\";}else{$(\"rt-" + i + "\").style.display=\"block\"}$(\"rt-" + i + "\").focus();' title='Details (note/result) for this test to include it in report'>Details :<img style=\"padding-left:20px;width:16px;height:16px;border:none;\" src=\"edit.png\"/></a></a><br \/><textarea cols='100'  name='textareaRt-"+i+"' rows='15' onkeyup='if(this.value.length>0){$(\"note-"+i+"\").innerHTML=\"Details :<img style=\"padding-left:20px;width:16px;height:16px;\" src=\"edit.png\"/>\";}else{$(\"note-"+i+"\").innerHTML=\"Details :<img style=\"padding-left:20px;width:16px;height:16px;\" src=\"edit.png\"/>\";}' id='rt-"+i+"' style='display:none'";
+
+		if (checkboxState != "true") {
+		    	data += "disabled='disabled'";
+		    }
+		data +="><\/textarea><input name='vt-"+i+"' type='text' id='vt-"+i+"' value='" + radioButtonState + "' style='display:none'></div></div>";
+	}
+	
+	ck.innerHTML = data;
+	$('btnStatus').disabled = '';$('btnReport').disabled = '';
+    $('loading').style.display='none';$('site').focus();
+    if(firstTime!=true){window.location='#end';firstTime=true;}    
+        
+}
+
+function escapeHTML(value)
+{
+    function replaceChars(ch)
+    {
+        switch (ch)
+        {
+            case "<":
+                return "&lt;";
+            case ">":
+                return "&gt;";
+            case "&":
+                return "&amp;";
+            case "'":
+                return "&#39;";
+            case '"':
+                return "&quot;";
+        }
+        return "?";
+    };
+    return String(value).replace(/[<>&"']/g, replaceChars);
+}
+function setCheckboxValue(checkboxNo){
+
+	var checkBoxId = 'ck-'+ checkboxNo ;
+	var detailsFieldId = 'rt-'+ checkboxNo ;
+	var checkboxLink = 'lnk-'+ checkboxNo ;
+
+	if($(checkBoxId).checked==0) {
+			localStorage.setItem( checkBoxId , "true");
+		} else {
+			localStorage.setItem( checkBoxId , "false");
+		}
+
+
+	if ($(detailsFieldId).disabled==true){
+			$(detailsFieldId).disabled="";$(checkboxLink).className="activated";
+			$(detailsFieldId).focus();
+		}else {
+		 	$(checkboxLink).className="list";$(detailsFieldId).disabled="disabled";
+		 }
+}
+function setCheckboxState(checkboxNo){
+	var checkBoxId = 'ck-'+ checkboxNo ;
+	if($(checkBoxId).checked==1){
+			$(checkBoxId).checked=0;
+		}
+		else{
+			$(checkBoxId).checked=1;
+		}
+}
+
+function setRadioButtonValue(bottonNo , RadioButtonValue)
+{
+	
+	var radioButtonId = 'vt-'+ bottonNo ;
+	var radioButtonIndividualId = 'vk'+ RadioButtonValue + '-' + bottonNo ;
+
+	$(radioButtonIndividualId).checked="1";
+	$(radioButtonId).value=RadioButtonValue;
+	localStorage.setItem( radioButtonId, RadioButtonValue );
+}
+
+var w = null;
+function toggle_exec_sum(flag)
+{
+	if(flag)
+		$('exec_sum_place').innerHTML = '';
+	else 
+		$('exec_sum_place').innerHTML = '<textarea name="textareaExec_sum" cols="85" rows="10" id="exec_sum" style="display:none"></textarea>';
+}
+function toggle_scope(flag)
+{
+	if(flag)
+		$('scope_place').innerHTML = '';
+	else 
+		$('scope_place').innerHTML = '<textarea name="textareaScope_place" cols="85" rows="10" id="scope" style="display:none"></textarea>';
+}
+function toggle_keyFindings(flag)
+{
+	if(flag)
+		$('keyFindings_place').innerHTML = '';
+	else 
+		$('keyFindings_place').innerHTML = '<textarea name="textareaKeyFindings_place" cols="85" rows="10" id="keyFindings" style="display:none"></textarea>';
+}
+function toggle_conclusion(flag)
+{
+	if(flag)
+		$('conclusion_place').innerHTML = '';
+	else 
+		$('conclusion_place').innerHTML = '<textarea name="textareaConclusion_place" cols="85" rows="10" id="conclusion" style="display:none"></textarea>';
+}
+
+function report()
+{
+    var site =$('site').value;
+	/*if (site=='http://'){alert('Please fill up target!');$('site').focus();return;}	*/
+	var pentester =$('pentester').value;
+	/*(if (pentester==''){alert('Please fill up pentester!');$('pentester').focus();return;}*/
+	site = escapeHTML(site);
+	pentester = escapeHTML(pentester);
+	var exec_sum = escapeHTML($('exec_sum').value);
+	var scope = escapeHTML($('scope').value);
+	var keyFindings = escapeHTML($('keyFindings').value);
+	var conclusion = escapeHTML($('conclusion').value);
+	toggle_exec_sum(true);
+	toggle_scope(true);
+	toggle_keyFindings(true);
+	toggle_conclusion(true);
+		
+	var d = new Date();
+	// var date = (d.getMonth()+1)+ '-' + d.getDate()  +'-'  +d.getFullYear();
+	var date = escapeHTML($('date').value);
+	var tot = lst.length;
+	var testno = 0;
+	var flawno = 0;
+	var flawindex = new Array();
+	var flaw_identified = false;
+	var details = '';
+	var html = '';
+	
+	for (var i=0;i<=document.getElementsByTagName("input").length-1;i++)
+	{		
+		if (document.getElementsByTagName("input")[i].type=='checkbox' && document.getElementsByTagName("input")[i].checked==1)
+		{
+			testno+=1;
+		}	
+	}
+	var counterj = 1;
+	for(var j=0;j<=document.getElementsByTagName("textarea").length-1;j++)
+	{
+		
+		if (!document.getElementsByTagName("textarea")[j].disabled)
+		{						
+			var radioButtonId = 'vt-'+ j ;
+			var radioButtonState = localStorage.getItem(radioButtonId);
+			if (radioButtonState =='yes')
+			{				
+				var prob = lst[j];				
+				if(prob[0]==" ")
+				{
+					prob = prob.replace(/ /,"");
+				}
+				prob = prob[0].toUpperCase()+prob.substr(1,prob.length);
+				details += 'Flaw ' + counterj + '. <span style="font-weight:bold;">' + prob + '</span></span><br \/>';
+				details +='<br \/>';	
+				flaw_identified = true;
+				counterj++;			
+			}
+
+			
+		}		
+	}
+	if(flaw_identified==false)
+	{
+		details += '-None-';
+	}	
+		
+	details += '<div style="background-color:#408ad2;"><h3><span  style="background-color:#408ad2;color:white;">&nbsp;Detailed Results&nbsp;&nbsp;</span></h3></div>';
+	
+	var a = false;var b=false;var c=false; var d = false;var e=false;var f=false;var g=false;var h = false;var i = false;var j=false;var k=false;
+	
+	for(var j=0;j<=document.getElementsByTagName("textarea").length-1;j++)
+	{
+		var radioButtonId = 'vt-'+ j ;
+		var radioButtonState = localStorage.getItem(radioButtonId);
+		if (!document.getElementsByTagName("textarea")[j].disabled)
+		{
+			var isvul = '<span style="font-weight:bold;';
+			if (radioButtonState=='yes')
+			{
+				isvul += 'color:red">Yes</span>';
+				flawno+=1;
+			}
+			else 
+			{
+				isvul += '">No</span>';
+			}
+		
+		switch(key[lst[j]])
+		{
+			case 1:
+			if(a==false){details += '<h3 style="background-color:#679ed2;">' + phase[0] + ' </h3>';a=true;}
+			break;
+			case 2:
+			if(b==false){details += '<h3 style="background-color:#679ed2;" >' + phase[1] + ' </h3>';b=true;}
+			break;
+			case 3:
+			if(c==false){details += '<h3 style="background-color:#679ed2;" >' + phase[2] + ' </h3>';c=true;}
+			break;				
+			case 4:
+			if(d==false){details += '<h3 style="background-color:#679ed2;" >' + phase[3] + ' </h3>';d=true;}
+			break;			
+			case 5:
+			if(e==false){details += '<h3 style="background-color:#679ed2;" >' + phase[4] + ' </h3>';e=true;}
+			break;				
+			case 6:
+			if(f==false){details += '<h3 style="background-color:#679ed2;" >' + phase[5] + ' </h3>';f=true;}
+			break;				
+			case 7:
+			if(g==false){details += '<h3 style="background-color:#679ed2;" >' + phase[6] + ' </h3>';g=true;}	
+			break;
+			case 8:
+			if(h==false){details += '<h3 style="background-color:#679ed2;" >' + phase[7] + ' </h3>';h=true;}
+			break;
+			case 9:
+			if(j==false){details += '<h3 style="background-color:#679ed2;" >' + phase[8] + ' </h3>';j=true;}
+			break;			
+			case 10:
+			if(k==false){details += '<h3 style="background-color:#679ed2;" >' + phase[9] + ' </h3>';k=true;}			
+			break;				
+		}		
+
+					
+			details += '<a name="test-' + (j+1) + '"></a>Test ' + (j+1) + ': <span style="font-weight:bold;">' + lst[j] + '</span><br />Vulnerable: ' + isvul +'<br \/>';
+			if (document.getElementsByTagName("textarea")[j].value.length!=0)
+			{
+				var res = document.getElementsByTagName("textarea")[j].value;
+				res = res.replace(/'/g,'&apos;');res = res.replace(/"/g,'&quot;');
+				res = res.replace(/</g,'&lt;');res = res.replace(/>/g,'&gt;');
+                                res = res.replace(/\\/g,'\\');res = res.replace(/%0a/g,'<br/>');
+                                res = res.replace(/\n/g,'<br/>');
+				//res = '<textarea style="width:100%;border:0px;font-family:arial" cols="100" rows="6">' + res + '</textarea>';
+				details += 'Details:<br \/><div style="padding:2% 2% 2% 2%;border-bottom:1px solid #ddd;">' + res + '<\/div>';
+			}
+			details +='<br \/>';
+			
+		}		
+	}
+//	alert(details);return;
+	html = '<!DOCTYPE html PUBLIC"-//W3C//DTD XHTML 1.0 Transitional//EN""http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" href="print.css"type="text/css" media="print" /><title>';
+	html += site + ' | Web Application Security Report</title><style type="text/css">body{line-height:1.8em;padding:2% 3% 3% 3%;width:1024px;margin:auto;font-family:Georgia;}a{text-decoration:none;color:black;}.style1{-moz-border-radius:2% 2% 2% 2%;background-color:#0c5aa6;color:#FFFFFF;font-weight:bold;text-align:center;font-size:1.2em;border-bottom:1px solid #0c5aa6;}.style2{text-decoration:none;font-weight:bold;}</style></head><body><div id="print" style="float:right;"><a href="javascript:window.print()"><img src="print.png" alt="print this page" id="print-button" /></a></div><h1 style="text-align:center;">';
+	html +=  'Security Assessment for ' + site + '</h1><br/><table cellpadding="4" cellspacing="4" style="width:100%;"><td width="42%">Target:&nbsp;</td><td width="58%">';
+	html += '<a href="'+site+'" target="_blank" class="style2">'+site+'</a>';
+	html += '</td></tr><tr><td>Methodology used:</td><td><strong>OWASP Testing Guide v3</strong></td></tr><tr><td>Number Of Tests:</td><td><strong>';
+	html += testno;
+	html += '</strong></td></tr><tr><td>Number Of Flaws:</td><td><strong>';
+	html += flawno;
+	html += '</strong></td></tr><tr><td>Date:</td><td><strong>';
+	html += date;
+	html += '</strong></td></tr><tr><td>Penetration Tester:</td><td><strong>';
+	html += pentester;
+	if(exec_sum.length>1)
+	{
+		html += '</strong></td></tr></table><br/><div style="background-color:#408ad2;"><h3><span  style="background-color:#408ad2;color:white;">&nbsp;Executive Summary&nbsp;&nbsp;</span></h3></div>';
+   		html += '<span style="padding:1% 1% 1% 1%">' + exec_sum+'<br/></span>';
+   	}
+   	else
+   	{
+		html += '</strong></td></tr></table>';
+ 	}	
+ 		if(scope.length>1)
+	{
+		html += '<br/><div style="background-color:#408ad2;"><h3><span  style="background-color:#408ad2;color:white;">&nbsp;Scope &nbsp;&nbsp;</span></h3></div>';
+   		html += '<span style="padding:1% 1% 1% 1%">' + scope+'<br/></span>';
+   	}
+ 	
+ 		if(keyFindings.length>1)
+	{
+		html += '<br/><div style="background-color:#408ad2;"><h3><span  style="background-color:#408ad2;color:white;">&nbsp;Key Findings&nbsp;&nbsp;</span></h3></div>';
+   		html += '<span style="padding:1% 1% 1% 1%">' + keyFindings+'<br/></span>';
+   	}
+ 	
+
+	html += '<br/><div style="background-color:#408ad2;"><h3><span  style="background-color:#408ad2;color:white;">&nbsp;Problems Identified&nbsp;&nbsp;</span></h3></div>';					
+	html += details;	
+
+		if(conclusion.length>1)
+	{
+		html += '<br/><div style="background-color:#408ad2;"><h3><span  style="pbackground-color:#408ad2;color:white;">&nbsp;Conclusion&nbsp;&nbsp;</span></h3></div>';
+   		html += '<span style="padding:1% 1% 1% 1%">' + conclusion+'<br/></span>';
+   	}				
+	html += '</body></html>';								
+	
+	w = window.open('');	
+	if(w==null){alert("Please allow popup!");return;}
+	w.document.write(html);
+	setTimeout("w.stop();",5000);
+	toggle_exec_sum(false);
+	$('exec_sum').value = exec_sum;	
+
+	toggle_scope(false);
+	$('scope').value = scope;
+
+	toggle_keyFindings(false);
+	$('keyFindings').value = keyFindings;
+
+	toggle_conclusion(false);
+	$('conclusion').value = conclusion;
+}
+
+function exist_in_array(item,array)
+{
+var found=false;
+  for(var i=0;i<=array.length;i++)
+  {
+     if (item == array[i])
+     {
+         found=true;
+        break;
+     }
+     else {found=false;}
+  }
+ return found;
+}
+function delete_from_array(index)
+{
+	var newarray = new Array();
+	index--;
+	for(var j=0;j<=lst.length-1;j++)
+	{
+		if(j!=index)
+		{
+			newarray.push(lst[j]+"");				
+		}		
+	}		
+	
+	return newarray;
+}
+
+function delete_from_array1(index,storedarray)
+{
+	var newarray = new Array();
+	index--;
+	for(var j=0;j<=storedarray.length-1;j++)
+	{
+		if(j!=index)
+		{
+			newarray.push(storedarray[j]+"");				
+		}		
+	}		
+	
+	return newarray;
+}
+
+onload = function(){ populate();setTimeout("disabletab();",1000);}
+
+function disabletab()
+{
+	for (var i=0;i<=document.getElementsByTagName("textarea").length-1;i++)
+	{	
+	 	document.getElementsByTagName("textarea")[i].onkeypress = function(e){if(e.keyCode==9){this.value+="\t\t";return false;}};
+	}	
+	 
+}
+
+</script>
+<script src="garlic.js"></script>
+</span>
+</form>
+</body></html>
